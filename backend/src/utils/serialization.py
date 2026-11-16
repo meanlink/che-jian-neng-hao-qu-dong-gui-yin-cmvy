@@ -9,3 +9,5 @@ def report_dict(r):
     return {k:getattr(r,k) for k in ['id','name','job_id','destination','interval_seconds','next_run','enabled']}
 def delivery_dict(d):
     return {k:getattr(d,k) for k in ['id','report_id','created_at','checksum','filename','destination']}
+def backup_dict(b):
+    return {k:getattr(b,k) for k in ['id','created_at','status','error','filename','checksum','size_bytes','counts']}

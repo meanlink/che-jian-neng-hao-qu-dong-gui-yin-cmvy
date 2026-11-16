@@ -7,6 +7,7 @@ from src.config.settings import ARTIFACT_DIR
 from src.models import Report, Delivery
 from src.schemas.report import ReportInput
 from src.middlewares.auth import current_user, admin_only
+from src.middlewares.maintenance import site_writable
 from src.services import reports
 from src.services.audit import record
 from src.utils.serialization import report_dict, delivery_dict
@@ -15,11 +16,11 @@ router=APIRouter()
 def listing(db=Depends(get_db),u=Depends(current_user)):
     return [report_dict(r) for r in db.scalars(select(Report).order_by(Report.id.desc()))]
 @router.post('/reports',status_code=201)
-def create(data:ReportInput,db=Depends(get_db),u=Depends(admin_only)):
+def create(data:ReportInput,db=Depends(get_db),u=Depends(admin_only),_=Depends(site_writable)):
     r=reports.create(db,data); record(db,u.email,'report.schedule',{'id':r.id,'destination':r.destination}); db.commit()
     return report_dict(r)
 @router.post('/reports/{id}/toggle')
-def toggle(id:int,db=Depends(get_db),u=Depends(admin_only)):
+def toggle(id:int,db=Depends(get_db),u=Depends(admin_only),_=Depends(site_writable)):
     r=db.get(Report,id)
     if not r:raise HTTPException(404,'分发计划不存在')
     r.enabled=not r.enabled;record(db,u.email,'report.toggle',{'id':id,'enabled':r.enabled});db.commit()
@@ -28,7 +29,7 @@ def toggle(id:int,db=Depends(get_db),u=Depends(admin_only)):
 def deliveries(db=Depends(get_db),u=Depends(current_user)):
     return [delivery_dict(d) for d in db.scalars(select(Delivery).order_by(Delivery.id.desc()).limit(100))]
 @router.get('/deliveries/{id}/download')
-def download(id:int,format:str='csv',db=Depends(get_db),u=Depends(current_user)):
+def download(id:int,format:str='csv',db=Depends(get_db),u=Depends(current_user),_=Depends(site_writable)):
     d=db.get(Delivery,id)
     if not d:raise HTTPException(404,'归档不存在')
     if format not in ('csv','json'):raise HTTPException(422,'支持 CSV 或 JSON')

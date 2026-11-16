@@ -8,3 +8,9 @@ class JobStatus(str, Enum):
     running = 'running'
     completed = 'completed'
     failed = 'failed'
+class BackupStatus(str, Enum):
+    ready = 'ready'
+    verifying = 'verifying'
+    restoring = 'restoring'
+    restored = 'restored'
+    failed = 'failed'
